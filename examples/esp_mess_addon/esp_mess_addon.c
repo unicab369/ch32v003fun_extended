@@ -1,7 +1,6 @@
 #include "ch32v003fun.h"
 #include "ch32v_hal.inl"
 #include <stdio.h>
-#include <errno.h>
 #include "TestClass.h"
 #include "i2c_slave.h"
 
@@ -137,9 +136,16 @@ void toggleLed() {
 // 	}
 // }
 
-int main() {
-	uint32_t count = 0;
-	
+int lastkey = 0;
+void handle_debug_input( int numbytes, uint8_t * data ) {
+	if( numbytes > 0 )
+		lastkey = data[numbytes-1];
+}
+
+uint32_t count = 0;
+uint8_t key;
+
+int main() {	
 	SystemInit();
 	Delay_Ms(100);
 
@@ -162,8 +168,7 @@ int main() {
 
 	ssd1306_i2c_init();
 	ssd1306_init();
-
-	UARTInit(96700, 0);
+	UARTInit(9600, 0);
 
 	while(1) {	
       // int check = I2CTest(0x23);
@@ -183,7 +188,7 @@ int main() {
       //    digitalWrite(0xC0, 0);
       // }
 
-      toggleLed();
+      // toggleLed();
 		// Delay_Ms(1000);
 		// printf( "Print #: %lu / Milliseconds: %lu / CNT: %lu\n", count++, systick_cnt, SysTick->CNT );
 
@@ -199,8 +204,19 @@ int main() {
 		ssd1306_refresh();
 
 		printf("%lu\r\n", count++);
-
 		Delay_Ms(1000);
+
+
+		poll_input();
+		key = lastkey;
+
+		if (key) {
+			char strOut2[6];
+			mini_snprintf(strOut2, sizeof(strOut2), "%u", key);
+			ssd1306_drawstr_sz(0,0, strOut2, 1, fontsize_8x8);
+			Delay_Ms(500);
+		}
+
 
       // int read = UART_Read(100);
       // if (read != -1) {
