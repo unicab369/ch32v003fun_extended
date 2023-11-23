@@ -889,9 +889,6 @@ int putchar(int c)
 }
 #endif
 
-#if defined( FUNCONF_USE_DEBUGPRINTF ) && FUNCONF_USE_DEBUGPRINTF
-
-
 void handle_debug_input( int numbytes, uint8_t * data ) __attribute__((weak));
 void handle_debug_input( int numbytes, uint8_t * data ) { }
 
@@ -916,6 +913,7 @@ void poll_input()
 	}
 }
 
+#if defined( FUNCONF_USE_DEBUGPRINTF ) && FUNCONF_USE_DEBUGPRINTF
 
 //           MSB .... LSB
 // DMDATA0: char3 char2 char1 [status word]

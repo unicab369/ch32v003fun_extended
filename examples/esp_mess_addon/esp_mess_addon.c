@@ -5,11 +5,12 @@
 #include "i2c_slave.h"
 
 //#define SSD1306_64X32
-#define SSD1306_128X32
-//#define SSD1306_128X64
+// #define SSD1306_128X32
+#define SSD1306_128X64
 
 #include "ssd1306_i2c.h"
 #include "ssd1306.h"
+#include "HardwareSerial.h"
 
 /* some bit definitions for systick regs */
 #define SYSTICK_SR_CNTIF (1<<0)
@@ -136,14 +137,24 @@ void toggleLed() {
 // 	}
 // }
 
+uint32_t count = 0;
+uint8_t key;
+uint8_t value = 0; 
+
+
 int lastkey = 0;
-void handle_debug_input( int numbytes, uint8_t * data ) {
-	if( numbytes > 0 )
+void handle_debug_input(int numbytes, uint8_t * data) {
+	if(numbytes > 0 )
+		digitalWrite(0xC0, value);
+		value = (value == 0) ? 1 : 0;
+		delay(500);
+
+		// printf("\nIM HERE 2222 = %d", numbytes);
 		lastkey = data[numbytes-1];
 }
 
-uint32_t count = 0;
-uint8_t key;
+char readings[100] = "";
+int readIndex = 0;
 
 int main() {	
 	SystemInit();
@@ -168,7 +179,9 @@ int main() {
 
 	ssd1306_i2c_init();
 	ssd1306_init();
-	UARTInit(9600, 0);
+	// UARTInit(9600, 0);
+
+	hwSerial_begin(9600, 0);
 
 	while(1) {	
       // int check = I2CTest(0x23);
@@ -192,31 +205,31 @@ int main() {
 		// Delay_Ms(1000);
 		// printf( "Print #: %lu / Milliseconds: %lu / CNT: %lu\n", count++, systick_cnt, SysTick->CNT );
 
-		char strOut[62];
-		count++;
-		mini_snprintf(strOut, sizeof(strOut), "%lu", count);
 		// mini_pprintf 
 
-		// clear buffer for next mode
-		ssd1306_setbuf(0);
-		ssd1306_drawstr_sz(0,0, strOut, 1, fontsize_8x8);
-		ssd1306_drawstr_sz(0,16, "16x16", 1, fontsize_16x16);
-		ssd1306_refresh();
+		if (hwSerial_available()) {
+			// clear buffer for next mode
+			ssd1306_setbuf(0);
+			ssd1306_drawstr_sz(0,32, "16x16", 1, fontsize_16x16);
 
-		printf("%lu\r\n", count++);
-		Delay_Ms(1000);
+			char strOut[16];
+			count++;
+			mini_snprintf(strOut, sizeof(strOut), "%lu", count);
+			ssd1306_drawstr_sz(0,0, strOut, 1, fontsize_8x8);
+			
+			for (int i=0; i<30; i++) {
+				int read = hwSerial_read();
+				readings[i] = read;
+			}
 
-
-		poll_input();
-		key = lastkey;
-
-		if (key) {
-			char strOut2[6];
-			mini_snprintf(strOut2, sizeof(strOut2), "%u", key);
-			ssd1306_drawstr_sz(0,0, strOut2, 1, fontsize_8x8);
-			Delay_Ms(500);
+			char strOut2[16];
+			mini_snprintf(strOut2, sizeof(strOut2), "%s\n", readings);
+			ssd1306_drawstr_sz(0,16, strOut2, 1, fontsize_8x8);
+			ssd1306_refresh();
+			delay(50);
 		}
 
+		// printf("%lu\r\n", count++);
 
       // int read = UART_Read(100);
       // if (read != -1) {
@@ -228,44 +241,3 @@ int main() {
 		// Delay_Ms(500);
 	}
 }
-
-
-
-// int main()
-// {
-// 	// 48MHz internal clock
-// 	SystemInit();
-
-// 	Delay_Ms( 100 );
-// 	printf("\r\r\n\ni2c_oled example\n\r");
-
-// 	// init i2c and oled
-// 	Delay_Ms( 100 );	// give OLED some more time
-// 	printf("initializing i2c oled...");
-// 	if(!ssd1306_i2c_init())
-// 	{
-// 		ssd1306_init();
-// 		printf("done.\n\r");
-		
-// 		printf("Looping on test modes...");
-// 		while(1)
-// 		{
-// 			for(uint8_t mode=0;mode<(SSD1306_H>32?9:8);mode++)
-// 			{
-// 				// clear buffer for next mode
-// 				ssd1306_setbuf(0);
-// 				printf("Scaled Text 1, 2\n\r");
-// 				ssd1306_drawstr_sz(0,0, "sz 8x8", 1, fontsize_8x8);
-// 				ssd1306_drawstr_sz(0,16, "16x16", 1, fontsize_16x16);
-// 				ssd1306_refresh();
-			
-// 				Delay_Ms(2000);
-// 			}
-// 		}
-// 	}
-// 	else
-// 		printf("failed.\n\r");
-	
-// 	printf("Stuck here forever...\n\r");
-// 	while(1);
-// }
