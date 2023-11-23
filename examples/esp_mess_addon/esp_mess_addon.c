@@ -161,17 +161,16 @@ int main() {
 	Delay_Ms(100);
 
    pinMode(0xC0, OUTPUT);
+	pinMode(0xC3, OUTPUT);
    pinMode(0xA1, OUTPUT);
+	digitalWrite(0xC3, 1);
+   digitalWrite(0xA1, 1);
+
    pinMode(0xD0, INPUT_PULLUP);
    pinMode(0xD2, INPUT_PULLUP);
    pinMode(0xD3, INPUT_PULLUP);
-   digitalWrite(0xA1, 1);
 
    // SetupI2CSlave(0xfa, i2c_registers, sizeof(i2c_registers));
-
-   // I2CInit(0xC1, 0xC2, 100000);
-   // uint8_t bh17Mode[1] = { 0x13 };
-   // I2CWrite(0x23, bh17Mode, sizeof(bh17Mode));
 
 	// init systick @ 1ms rate
 	// printf("initializing systick...");
@@ -180,6 +179,10 @@ int main() {
 	ssd1306_i2c_init();
 	ssd1306_init();
 	// UARTInit(9600, 0);
+
+   // // I2CInit(0xC1, 0xC2, 100000);
+   // uint8_t bh17Mode[1] = { 0x13 };
+   // I2CWrite(0x23, bh17Mode, sizeof(bh17Mode));
 
 	hwSerial_begin(9600, 0);
 
@@ -207,27 +210,13 @@ int main() {
 
 		// mini_pprintf 
 
-		if (hwSerial_available()) {
-			// clear buffer for next mode
-			ssd1306_setbuf(0);
-			ssd1306_drawstr_sz(0,32, "16x16", 1, fontsize_16x16);
+		// if (hwSerial_available()) {
+		// 	printStuff()
+		// 	delay(50);
+		// }
 
-			char strOut[16];
-			count++;
-			mini_snprintf(strOut, sizeof(strOut), "%lu", count);
-			ssd1306_drawstr_sz(0,0, strOut, 1, fontsize_8x8);
-			
-			for (int i=0; i<30; i++) {
-				int read = hwSerial_read();
-				readings[i] = read;
-			}
-
-			char strOut2[16];
-			mini_snprintf(strOut2, sizeof(strOut2), "%s\n", readings);
-			ssd1306_drawstr_sz(0,16, strOut2, 1, fontsize_8x8);
-			ssd1306_refresh();
-			delay(50);
-		}
+		printStuff();
+		Delay_Ms(500);
 
 		// printf("%lu\r\n", count++);
 
@@ -240,4 +229,25 @@ int main() {
 
 		// Delay_Ms(500);
 	}
+}
+
+void printStuff() {
+	// clear buffer for next mode
+	ssd1306_setbuf(0);
+	ssd1306_drawstr_sz(0,32, "16x16", 1, fontsize_16x16);
+
+	char strOut[16];
+	count++;
+	mini_snprintf(strOut, sizeof(strOut), "%lu", count);
+	ssd1306_drawstr_sz(0,0, strOut, 1, fontsize_8x8);
+	
+	// for (int i=0; i<30; i++) {
+	// 	int read = hwSerial_read();
+	// 	readings[i] = read;
+	// }
+
+	char strOut2[16];
+	mini_snprintf(strOut2, sizeof(strOut2), "%s\n", readings);
+	ssd1306_drawstr_sz(0,16, strOut2, 1, fontsize_8x8);
+	ssd1306_refresh();
 }

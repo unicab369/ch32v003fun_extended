@@ -88,7 +88,7 @@ size_t hwSerial_write(const uint8_t *buffer, size_t size)
 // }
 
 // Removed IRQ handler for testing
-USART1_IRQHandler( void ) __attribute__((interrupt));
+// USART1_IRQHandler( void ) __attribute__((interrupt));
 USART1_IRQHandler(void) {
    if(USART1->STATR & USART_FLAG_RXNE) {
       // Write into buffer
