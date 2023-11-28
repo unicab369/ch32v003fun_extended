@@ -88,13 +88,14 @@ size_t hwSerial_write(const uint8_t *buffer, size_t size)
 // }
 
 // Removed IRQ handler for testing
-// USART1_IRQHandler( void ) __attribute__((interrupt));
-USART1_IRQHandler(void) {
+void USART1_IRQHandler(void) __attribute__((interrupt));
+void USART1_IRQHandler(void) {
    if(USART1->STATR & USART_FLAG_RXNE) {
       // Write into buffer
       rxBuffer[rxBufferTail] = USART1->DATAR & (uint16_t)0x01FF;
 
       rxBufferTail = (rxBufferTail + 1) % RX_BUFFER_SIZE;
+      printf("*** IM HERE  4444");
 
       if(rxBufferTail == rxBufferHead) {
          // Buffer empty, disable USART interrupt

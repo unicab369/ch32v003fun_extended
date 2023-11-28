@@ -49,7 +49,7 @@ void SysTick_Handler(void) {
 	systick_cnt++;       // update counter
 }
 
-uint32_t delayTime = 1000;
+uint32_t delayTime = 500;
 
 uint8_t bh17Out[2];
 uint8_t sht31ReadCmd[2];
@@ -60,11 +60,132 @@ volatile uint32_t systick_cnt;
 void toggleLed() {
    digitalWrite(0xC0, 1);
    digitalWrite(0xA1, 1);
+	digitalWrite(0xD2, 1);
    Delay_Ms(delayTime);
+
    digitalWrite(0xC0, 0);
    digitalWrite(0xA1, 0);
+	digitalWrite(0xD2, 0);
    Delay_Ms(delayTime);
 }
+
+uint32_t count = 0;
+uint8_t key;
+uint8_t value = 0; 
+
+
+int lastkey = 0;
+void handle_debug_input(int numbytes, uint8_t * data) {
+	if(numbytes > 0 )
+		digitalWrite(0xC0, value);
+		value = (value == 0) ? 1 : 0;
+		delay(500);
+
+		// printf("\nIM HERE 2222 = %d", numbytes);
+		lastkey = data[numbytes-1];
+}
+
+char readings[100] = "";
+int readIndex = 0;
+
+void SetupI2CSlave(uint8_t address, volatile uint8_t* registers, uint8_t size);
+
+int main() {	
+	SystemInit();
+	Delay_Ms(100);
+
+   pinMode(0xC0, OUTPUT);
+	pinMode(0xC3, OUTPUT);
+   pinMode(0xA1, OUTPUT);
+	pinMode(0xD2, OUTPUT);
+	digitalWrite(0xC3, 1);
+   digitalWrite(0xA1, 1);
+	digitalWrite(0xD2, 1);
+
+   pinMode(0xD0, INPUT_PULLUP);
+   pinMode(0xD2, INPUT_PULLUP);
+   pinMode(0xD3, INPUT_PULLUP);
+
+   SetupI2CSlave(0x78, i2c_registers, sizeof(i2c_registers));
+
+	// init systick @ 1ms rate
+	systick_init();
+
+   // I2CInit(0xC1, 0xC2, 100000);
+   // uint8_t bh17Mode[1] = { 0x13 };
+   // I2CWrite(0x23, bh17Mode, sizeof(bh17Mode));
+
+	// ssd1306_i2c_init();
+	// ssd1306_init();
+	UARTInit(9600, 0);
+	// hwSerial_begin(9600, 0);
+
+	while(1) {	
+		int check = 1;
+      // int check = I2CTest(0x23);
+      // I2CRead(0x23, bh17Out, 2);
+      // printf("\nCheck = %d, Value = %02X %02X", check, bh17Out[0], bh17Out[1]);
+		// printf("\nIM HERE 3");
+
+		// char myStr[] = "\nHELLO WORLD 3";
+		// UART_Write(myStr, sizeof(myStr));
+      
+      // uint8_t read1 = digitalRead(0xD0);
+      // uint8_t read2 = digitalRead(0xD2);
+      // uint8_t read3 = digitalRead(0xD3);
+      // printf("\nRead1 = %u, Read2 = %u, Read3 = %u", read1, read2, read3);
+
+      // if (i2c_registers[0] & 1) { // Turn on LED (PD0) if bit 1 of register 0 is set
+      //    digitalWrite(0xC0, 1);
+      //    printf("\n\n**********IM HEREEEEEEEEEEEE");
+      //    Delay_Ms(1000);
+      // } else {
+      //    digitalWrite(0xC0, 0);
+      // }
+
+		// mini_pprintf 
+
+		// while (hwSerial_available()) {
+		// 	printStuff();
+		// 	// delay(50);
+		// }
+
+      toggleLed();
+		printf("Print #: %lu / Milliseconds: %lu / CNT: %lu\n", count++, systick_cnt, SysTick->CNT);
+		// printStuff();
+		// Delay_Ms(1000);
+	}
+}
+
+void printStuff() {
+	// clear buffer for next mode
+	ssd1306_setbuf(0);
+	ssd1306_drawstr_sz(0,32, "16x16", 1, fontsize_16x16);
+
+	char strOut[16];
+	count++;
+	mini_snprintf(strOut, sizeof(strOut), "%lu", count);
+	ssd1306_drawstr_sz(0,0, strOut, 1, fontsize_8x8);
+	
+	// int read = hwSerial_read();
+
+	// while (read) {
+	// 	read = hwSerial_read();
+	// }
+	// // for (int i=0; i<30; i++) {
+	// // 	read = hwSerial_read();
+	// // 	readings[i] = read;
+	// // }
+
+	char strOut2[16];
+	mini_snprintf(strOut2, sizeof(strOut2), "%s\n", readings);
+	ssd1306_drawstr_sz(0,16, strOut2, 1, fontsize_8x8);
+	ssd1306_refresh();
+}
+
+
+
+
 
 // int main() {
 // 	SystemInit();
@@ -136,118 +257,3 @@ void toggleLed() {
 // 		printf("\r\nawake, %u\r\n", counter++);
 // 	}
 // }
-
-uint32_t count = 0;
-uint8_t key;
-uint8_t value = 0; 
-
-
-int lastkey = 0;
-void handle_debug_input(int numbytes, uint8_t * data) {
-	if(numbytes > 0 )
-		digitalWrite(0xC0, value);
-		value = (value == 0) ? 1 : 0;
-		delay(500);
-
-		// printf("\nIM HERE 2222 = %d", numbytes);
-		lastkey = data[numbytes-1];
-}
-
-char readings[100] = "";
-int readIndex = 0;
-
-int main() {	
-	SystemInit();
-	Delay_Ms(100);
-
-   pinMode(0xC0, OUTPUT);
-	pinMode(0xC3, OUTPUT);
-   pinMode(0xA1, OUTPUT);
-	digitalWrite(0xC3, 1);
-   digitalWrite(0xA1, 1);
-
-   pinMode(0xD0, INPUT_PULLUP);
-   pinMode(0xD2, INPUT_PULLUP);
-   pinMode(0xD3, INPUT_PULLUP);
-
-   // SetupI2CSlave(0xfa, i2c_registers, sizeof(i2c_registers));
-
-	// init systick @ 1ms rate
-	// printf("initializing systick...");
-	systick_init();
-
-	ssd1306_i2c_init();
-	ssd1306_init();
-	// UARTInit(9600, 0);
-
-   // // I2CInit(0xC1, 0xC2, 100000);
-   // uint8_t bh17Mode[1] = { 0x13 };
-   // I2CWrite(0x23, bh17Mode, sizeof(bh17Mode));
-
-	hwSerial_begin(9600, 0);
-
-	while(1) {	
-      // int check = I2CTest(0x23);
-      // I2CRead(0x23, bh17Out, 2);
-      // printf("\nCheck = %d, Value = %02X %02X", check, bh17Out[0], bh17Out[1]);
-      
-      // uint8_t read1 = digitalRead(0xD0);
-      // uint8_t read2 = digitalRead(0xD2);
-      // uint8_t read3 = digitalRead(0xD3);
-      // printf("\nRead1 = %u, Read2 = %u, Read3 = %u", read1, read2, read3);
-
-      // if (i2c_registers[0] & 1) { // Turn on LED (PD0) if bit 1 of register 0 is set
-      //    digitalWrite(0xC0, 1);
-      //    printf("\n\n**********IM HEREEEEEEEEEEEE");
-      //    Delay_Ms(1000);
-      // } else {
-      //    digitalWrite(0xC0, 0);
-      // }
-
-      // toggleLed();
-		// Delay_Ms(1000);
-		// printf( "Print #: %lu / Milliseconds: %lu / CNT: %lu\n", count++, systick_cnt, SysTick->CNT );
-
-		// mini_pprintf 
-
-		// if (hwSerial_available()) {
-		// 	printStuff()
-		// 	delay(50);
-		// }
-
-		printStuff();
-		Delay_Ms(500);
-
-		// printf("%lu\r\n", count++);
-
-      // int read = UART_Read(100);
-      // if (read != -1) {
-      //    ssd1306_drawstr_sz(0,0, "aaaa", 1, fontsize_8x8);
-		// 	ssd1306_refresh();
-      //    // printf("\nch32v: %d", read);
-      // }
-
-		// Delay_Ms(500);
-	}
-}
-
-void printStuff() {
-	// clear buffer for next mode
-	ssd1306_setbuf(0);
-	ssd1306_drawstr_sz(0,32, "16x16", 1, fontsize_16x16);
-
-	char strOut[16];
-	count++;
-	mini_snprintf(strOut, sizeof(strOut), "%lu", count);
-	ssd1306_drawstr_sz(0,0, strOut, 1, fontsize_8x8);
-	
-	// for (int i=0; i<30; i++) {
-	// 	int read = hwSerial_read();
-	// 	readings[i] = read;
-	// }
-
-	char strOut2[16];
-	mini_snprintf(strOut2, sizeof(strOut2), "%s\n", readings);
-	ssd1306_drawstr_sz(0,16, strOut2, 1, fontsize_8x8);
-	ssd1306_refresh();
-}
