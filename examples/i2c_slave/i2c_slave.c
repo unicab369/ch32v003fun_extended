@@ -6,12 +6,12 @@
 // note that the register set is modified by interrupts, to prevent the compiler from accidently optimizing stuff
 // away make sure to declare the register array volatile
 
-volatile uint8_t i2c_registers[32] = {0x00};
+volatile uint8_t i2c_registers[32] = {0x00, 0x01, 0x02, 0x03, 0x04};
 
 int main() {
     SystemInit();
 
-    SetupI2CSlave(0x9, i2c_registers, sizeof(i2c_registers));
+    SetupI2CSlave(0x78, i2c_registers, sizeof(i2c_registers));
 
     // Enable GPIOD and set pin 0 to output
     RCC->APB2PCENR |= RCC_APB2Periph_GPIOD;
@@ -19,10 +19,10 @@ int main() {
     GPIOD->CFGLR |= (GPIO_Speed_10MHz | GPIO_CNF_OUT_PP)<<(4*0);
 
     while (1) {
-        if (i2c_registers[0] & 1) { // Turn on LED (PD0) if bit 1 of register 0 is set
-            GPIOD-> BSHR |= 1 << 16;
-        } else {
-            GPIOD-> BSHR |= 1;
-        }
+        // if (i2c_registers[0] & 1) { // Turn on LED (PD0) if bit 1 of register 0 is set
+        //     GPIOD-> BSHR |= 1 << 16;
+        // } else {
+        //     GPIOD-> BSHR |= 1;
+        // }
     }
 }

@@ -54,7 +54,7 @@ uint32_t delayTime = 500;
 uint8_t bh17Out[2];
 uint8_t sht31ReadCmd[2];
 
-volatile uint8_t i2c_registers[32] = {0x00};
+volatile uint8_t i2c_registers[32] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
 volatile uint32_t systick_cnt;
 
 void toggleLed() {
@@ -88,11 +88,9 @@ void handle_debug_input(int numbytes, uint8_t * data) {
 char readings[100] = "";
 int readIndex = 0;
 
-void SetupI2CSlave(uint8_t address, volatile uint8_t* registers, uint8_t size);
-
 int main() {	
 	SystemInit();
-	Delay_Ms(100);
+	// Delay_Ms(100);
 
    pinMode(0xC0, OUTPUT);
 	pinMode(0xC3, OUTPUT);
@@ -109,7 +107,7 @@ int main() {
    SetupI2CSlave(0x78, i2c_registers, sizeof(i2c_registers));
 
 	// init systick @ 1ms rate
-	systick_init();
+	// systick_init();
 
    // I2CInit(0xC1, 0xC2, 100000);
    // uint8_t bh17Mode[1] = { 0x13 };
@@ -150,8 +148,11 @@ int main() {
 		// 	// delay(50);
 		// }
 
-      toggleLed();
-		printf("Print #: %lu / Milliseconds: %lu / CNT: %lu\n", count++, systick_cnt, SysTick->CNT);
+		// uint8_t read = i2c_registers[0] & 1;
+		// digitalWrite(0xD2, read);
+
+      // toggleLed();
+		// printf("Print #: %lu / Milliseconds: %lu / CNT: %lu\n", count++, systick_cnt, SysTick->CNT);
 		// printStuff();
 		// Delay_Ms(1000);
 	}

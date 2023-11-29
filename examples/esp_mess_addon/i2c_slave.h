@@ -101,13 +101,17 @@ void I2C1_EV_IRQHandler(void) {
    STAR2 = I2C1->STAR2;
 
    I2C1->CTLR1 |= I2C_CTLR1_ACK;
-
+   
    if (STAR1 & I2C_STAR1_ADDR) { // Start event
       i2c_slave_state.first_write = 1; // Next write will be the offset
       i2c_slave_state.position = i2c_slave_state.offset; // Reset position
+
+      printf("\nIM HERE 222");
    }
 
    if (STAR1 & I2C_STAR1_RXNE) { // Write event
+      printf("\nIM HERE 333");
+
       if (i2c_slave_state.first_write) { // First byte written, set the offset
          i2c_slave_state.offset = I2C1->DATAR;
          i2c_slave_state.position = i2c_slave_state.offset;
@@ -121,6 +125,8 @@ void I2C1_EV_IRQHandler(void) {
    }
 
    if (STAR1 & I2C_STAR1_TXE) { // Read event
+      printf("\nIM HERE 444");
+
       if (i2c_slave_state.position < i2c_slave_state.size) {
          I2C1->DATAR = i2c_slave_state.registers[i2c_slave_state.position];
          i2c_slave_state.position++;
@@ -134,6 +140,8 @@ void I2C1_ER_IRQHandler(void) __attribute__((interrupt));
 void I2C1_ER_IRQHandler(void) {
    uint16_t STAR1 = I2C1->STAR1;
 
+   printf("\nIM HERE 111");
+   
    if (STAR1 & I2C_STAR1_BERR) { // Bus error
       I2C1->STAR1 &= ~(I2C_STAR1_BERR); // Clear error
    }
